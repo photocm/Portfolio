@@ -47,7 +47,6 @@
       font-weight: 300;
       overflow-x: hidden;
     }
-    body.has-custom-cursor { cursor: none; }
 
     a { color: inherit; text-decoration: none; }
     img { display: block; width: 100%; height: 100%; object-fit: cover; }
@@ -61,27 +60,6 @@
       }
     }
 
-    /* =============================================
-       CURSEUR CUSTOM — desktop uniquement
-    ============================================= */
-    .cursor {
-      width: 8px; height: 8px;
-      background: var(--beige); border-radius: 50%;
-      position: fixed; pointer-events: none; z-index: 9999;
-      transform: translate(-50%, -50%);
-      will-change: left, top; display: none;
-    }
-    .cursor-ring {
-      width: 34px; height: 34px;
-      border: 1px solid rgba(200,184,154,0.5); border-radius: 50%;
-      position: fixed; pointer-events: none; z-index: 9998;
-      transform: translate(-50%, -50%);
-      transition: width .3s, height .3s;
-      will-change: left, top; display: none;
-    }
-    body.has-custom-cursor .cursor,
-    body.has-custom-cursor .cursor-ring { display: block; }
-    body.has-custom-cursor:has(a:hover, button:hover) .cursor-ring { width: 52px; height: 52px; }
 
     /* =============================================
        NAVIGATION
@@ -534,10 +512,6 @@
 </head>
 <body>
 
-<!-- Curseur custom -->
-<div class="cursor"      id="cursor"     aria-hidden="true"></div>
-<div class="cursor-ring" id="cursorRing" aria-hidden="true"></div>
-
 <!-- Menu mobile -->
 <div class="mobile-menu" id="mobileMenu" role="dialog" aria-label="Menu navigation">
   <a href="#" onclick="go('home');     closeMobile()">Accueil</a>
@@ -789,12 +763,6 @@ document.addEventListener('DOMContentLoaded', function () {
 
   var isTouchDevice = ('ontouchstart' in window) || (navigator.maxTouchPoints > 0);
 
-  /* Curseur custom desktop uniquement */
-  if (!isTouchDevice) {
-    document.body.classList.add('has-custom-cursor');
-    initCursor();
-  }
-
   buildHeroBackground();
   initFade();
   initLazyImages();
@@ -852,23 +820,6 @@ document.addEventListener('DOMContentLoaded', function () {
 
 });
 
-/* =============================================
-   CURSEUR CUSTOM
-============================================= */
-function initCursor() {
-  var cur  = document.getElementById('cursor');
-  var ring = document.getElementById('cursorRing');
-  if (!cur || !ring) return;
-  var mx = 0, my = 0, rx = 0, ry = 0;
-  document.addEventListener('mousemove', function (e) { mx = e.clientX; my = e.clientY; }, { passive: true });
-  function animCursor() {
-    cur.style.left  = mx + 'px'; cur.style.top   = my + 'px';
-    rx += (mx - rx) * 0.12; ry += (my - ry) * 0.12;
-    ring.style.left = Math.round(rx) + 'px'; ring.style.top = Math.round(ry) + 'px';
-    requestAnimationFrame(animCursor);
-  }
-  animCursor();
-}
 
 /* =============================================
    LAZY LOADING
@@ -979,46 +930,53 @@ function parseFrDate(str) {
    correspondant (category + link), via le systeme deja existant.
 ======================================== */
 const bestPhotos = [
-  { image: 'images/football/match10/1.webp',  category: 'foot', link: 0 },
-  { image: 'images/football/match10/5.webp',  category: 'foot', link: 0 },
-  { image: 'images/football/match10/9.webp',  category: 'foot', link: 0 },
-  { image: 'images/football/match10/13.webp', category: 'foot', link: 0 },
-  { image: 'images/football/match9/2.webp',   category: 'foot', link: 1 },
-  { image: 'images/football/match9/6.webp',   category: 'foot', link: 1 },
-  { image: 'images/football/match9/10.webp',  category: 'foot', link: 1 },
-  { image: 'images/football/match1/3.webp',   category: 'foot', link: 2 },
+  { image: 'images/football/match10/7.webp',  category: 'foot', link: 0 },
+  { image: 'images/football/match10/12.webp',  category: 'foot', link: 0 },
+  { image: 'images/football/match10/4.webp',  category: 'foot', link: 0 },
+  { image: 'images/football/match10/10.webp', category: 'foot', link: 0 },
+  { image: 'images/football/match9/8.webp',   category: 'foot', link: 1 },
+  { image: 'images/football/match9/1.webp',   category: 'foot', link: 1 },
+  { image: 'images/football/match1/10.webp',   category: 'foot', link: 2 },
   { image: 'images/football/match1/7.webp',   category: 'foot', link: 2 },
-  { image: 'images/football/match1/11.webp',  category: 'foot', link: 2 },
-  { image: 'images/football/match3/4.webp',   category: 'foot', link: 3 },
-  { image: 'images/football/match3/8.webp',   category: 'foot', link: 3 },
-  { image: 'images/football/match3/12.webp',  category: 'foot', link: 3 },
-  { image: 'images/football/match5/2.webp',   category: 'foot', link: 6 },
-  { image: 'images/football/match5/7.webp',   category: 'foot', link: 6 },
+  { image: 'images/football/match1/3.webp',  category: 'foot', link: 2 },
+  { image: 'images/football/match2/9.webp',  category: 'foot', link: 4 },
+  { image: 'images/football/match2/11.webp',  category: 'foot', link: 4 },
+  { image: 'images/football/match2/4.webp',  category: 'foot', link: 4 },
+  { image: 'images/football/match2/5.webp',  category: 'foot', link: 4 },
+  { image: 'images/football/match2/7.webp',  category: 'foot', link: 4 },
+  { image: 'images/football/match3/2.webp',   category: 'foot', link: 3 },
+  { image: 'images/football/match3/9.webp',   category: 'foot', link: 3 },
+  { image: 'images/football/match4/5.webp',  category: 'foot', link: 5 },
+  { image: 'images/football/match5/1.webp',   category: 'foot', link: 6 },
+  { image: 'images/football/match5/6.webp',   category: 'foot', link: 6 },
   { image: 'images/football/match5/13.webp',  category: 'foot', link: 6 },
-  { image: 'images/basket/match1/2.webp',     category: 'basket', link: 0 },
-  { image: 'images/basket/match1/5.webp',     category: 'basket', link: 0 },
-  { image: 'images/basket/match1/8.webp',     category: 'basket', link: 0 },
-  { image: 'images/basket/match2/3.webp',     category: 'basket', link: 1 },
-  { image: 'images/basket/match2/7.webp',     category: 'basket', link: 1 },
-  { image: 'images/basket/match2/10.webp',    category: 'basket', link: 1 },
+  { image: 'images/football/match6/13.webp',  category: 'foot', link: 7 },
+  { image: 'images/football/match6/2.webp',  category: 'foot', link: 7 },
+  { image: 'images/football/match6/14.webp',  category: 'foot', link: 7 },
+  { image: 'images/football/match7/3.webp',  category: 'foot', link: 8 },
+  { image: 'images/football/match7/11.webp',  category: 'foot', link: 8 },
+  { image: 'images/football/match8/1.webp',  category: 'foot', link: 9 },
+  { image: 'images/football/match8/11.webp',  category: 'foot', link: 9 },
+  { image: 'images/basket/match1/6.webp',     category: 'basket', link: 0 },
+  { image: 'images/basket/match1/4.webp',     category: 'basket', link: 0 },
+  { image: 'images/basket/match2/8.webp',     category: 'basket', link: 2 },
+  { image: 'images/basket/match3/2.webp',     category: 'basket', link: 3 },
+  { image: 'images/basket/match4/7.webp',     category: 'basket', link: 4 },
   { image: 'images/cyclisme/championnatdefrance/3.webp',  category: 'cyclisme', link: 0 },
-  { image: 'images/cyclisme/championnatdefrance/8.webp',  category: 'cyclisme', link: 0 },
-  { image: 'images/cyclisme/championnatdefrance/13.webp', category: 'cyclisme', link: 0 },
-  { image: 'images/cyclisme/tourdefrance/4.webp',  category: 'cyclisme', link: 1 },
-  { image: 'images/cyclisme/tourdefrance/9.webp',  category: 'cyclisme', link: 1 },
-  { image: 'images/cyclisme/tourdefrance/12.webp', category: 'cyclisme', link: 1 },
-  { image: 'images/rugby/match1/2.webp',  category: 'rugby', link: 0 },
+  { image: 'images/cyclisme/championnatdefrance/5.webp',  category: 'cyclisme', link: 0 },
+  { image: 'images/cyclisme/championnatdefrance/11.webp', category: 'cyclisme', link: 0 },
+  { image: 'images/cyclisme/tourdefrance/3.webp',  category: 'cyclisme', link: 1 },
+  { image: 'images/cyclisme/tourdefrance/8.webp',  category: 'cyclisme', link: 1 },
+  { image: 'images/cyclisme/tourdefrance/13.webp', category: 'cyclisme', link: 1 },
+  { image: 'images/rugby/match1/1.webp',  category: 'rugby', link: 0 },
   { image: 'images/rugby/match1/7.webp',  category: 'rugby', link: 0 },
-  { image: 'images/rugby/match1/11.webp', category: 'rugby', link: 0 },
-  { image: 'images/nature/shooting1/2.webp',  category: 'nature', link: 0 },
-  { image: 'images/nature/shooting1/7.webp',  category: 'nature', link: 0 },
-  { image: 'images/nature/shooting1/13.webp', category: 'nature', link: 0 },
-  { image: 'images/evenements/ceremoniegendarmerie/5.webp',  category: 'events', link: 0 },
-  { image: 'images/evenements/ceremoniegendarmerie/15.webp', category: 'events', link: 0 },
-  { image: 'images/evenements/ceremoniegendarmerie/25.webp', category: 'events', link: 0 },
-  { image: 'images/evenements/14juillet/3.webp',  category: 'events', link: 1 },
-  { image: 'images/evenements/14juillet/7.webp',  category: 'events', link: 1 },
-  { image: 'images/evenements/14juillet/10.webp', category: 'events', link: 1 },
+  { image: 'images/nature/shooting1/8.webp',  category: 'nature', link: 0 },
+  { image: 'images/nature/shooting1/9.webp',  category: 'nature', link: 0 },
+  { image: 'images/evenements/ceremoniegendarmerie/2.webp',  category: 'events', link: 0 },
+  { image: 'images/evenements/ceremoniegendarmerie/4.webp', category: 'events', link: 0 },
+  { image: 'images/evenements/ceremoniegendarmerie/1.webp', category: 'events', link: 0 },
+  { image: 'images/evenements/14juillet/8.webp',  category: 'events', link: 1 },
+  { image: 'images/evenements/14juillet/1.webp',  category: 'events', link: 1 },
 ];
 
 /* =============================================
