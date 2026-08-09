@@ -208,60 +208,83 @@
       height: 100vh;
       display: flex; align-items: center; justify-content: center;
       position: relative; overflow: hidden;
+      background: linear-gradient(135deg, #0a0a0a, #1a1a1a);
+    }
+    /* Vignettage doux en haut (logo/menu) et en bas (bouton) — pas de bloc, juste un dégradé */
+    .hero-vignette {
+      position: absolute; inset: 0; z-index: 1; pointer-events: none;
       background:
-        linear-gradient(rgba(255,255,255,.025) 1px, transparent 1px),
-        linear-gradient(90deg, rgba(255,255,255,.025) 1px, transparent 1px),
-        linear-gradient(135deg, #0a0a0a, #1a1a1a);
-      background-size: 60px 60px, 60px 60px, 100%;
+        linear-gradient(to bottom, rgba(10,10,10,.82) 0%, rgba(10,10,10,.18) 16%, rgba(10,10,10,.18) 80%, rgba(10,10,10,.85) 100%),
+        rgba(10,10,10,.22);
     }
-    .hero::before, .hero::after {
-      content: ''; position: absolute; width: 1px;
-      background: linear-gradient(to bottom, transparent, rgba(200,184,154,.2), transparent);
-    }
-    .hero::before { left: 50%; height: 120px; top: 0; }
-    .hero::after  { left: 50%; height: 120px; bottom: 0; }
 
-    .hero-content { text-align: center; position: relative; }
+    .hero-content { text-align: center; position: relative; z-index: 3; }
     .bracket { position: absolute; width: 32px; height: 32px; border-color: rgba(200,184,154,.4); border-style: solid; }
     .bracket-tl { top: -16px; left: -56px; border-width: 1px 0 0 1px; }
     .bracket-br { bottom: -16px; right: -56px; border-width: 0 1px 1px 0; }
+
+    /* Halo/dégradé flouté derrière le texte central — pas de bloc, pas de bordure */
+    .hero-content-halo { position: relative; z-index: 3; }
+    .hero-content-halo::before {
+      content: '';
+      position: absolute; inset: -70px -90px;
+      background: radial-gradient(ellipse at center, rgba(10,10,10,.88) 0%, rgba(10,10,10,.7) 40%, rgba(10,10,10,.3) 65%, rgba(10,10,10,0) 82%);
+      -webkit-backdrop-filter: blur(18px);
+      backdrop-filter: blur(18px);
+      -webkit-mask-image: radial-gradient(ellipse at center, black 50%, transparent 78%);
+      mask-image: radial-gradient(ellipse at center, black 50%, transparent 78%);
+      z-index: -1; pointer-events: none;
+    }
 
     .hero-tag { font-size: .62rem; letter-spacing: .3em; text-transform: uppercase; color: var(--beige); margin-bottom: 24px; }
     .hero-name { font-family: 'Cormorant Garamond', serif; font-size: clamp(3rem, 9vw, 7.5rem); font-weight: 300; line-height: 1; margin-bottom: 16px; }
     .hero-name em { display: block; font-style: italic; color: rgba(158,140,111,0.45); font-size: 0.4em; margin-top: 10px; }
     .hero-sub { font-size: .82rem; letter-spacing: .2em; text-transform: uppercase; color: rgba(245,240,232,.45); margin-bottom: 48px; }
 
-    .hero-scroll {
-      position: absolute; bottom: 36px; left: 50%; transform: translateX(-50%);
-      display: flex; flex-direction: column; align-items: center; gap: 8px;
-      color: rgba(245,240,232,.3); font-size: .58rem; letter-spacing: .2em; text-transform: uppercase;
+    /* Bouton "Explorer le portfolio" — prend la place de l'ancien "Défiler" */
+    .hero-explore-btn {
+      position: absolute; bottom: 40px; left: 50%; transform: translateX(-50%);
+      z-index: 3;
     }
-    .scroll-line {
-      width: 1px; height: 36px;
-      background: linear-gradient(to bottom, var(--beige), transparent);
-      animation: pulse 1.8s ease-in-out infinite;
-    }
+
     @keyframes pulse { 0%,100%{opacity:.3} 50%{opacity:1} }
 
     /* =============================================
-       SLIDER
+       🖼️ FOND PHOTO — RANGÉES DÉFILANT HORIZONTALEMENT
+       Remplit toute la page d'accueil. Purement CSS
+       (transform), non interactif, jamais en pause.
     ============================================= */
-    .slider-section { padding: 80px 0; border-top: 1px solid var(--border); overflow: hidden; }
-    .slider-label { text-align: center; font-size: .62rem; letter-spacing: .28em; text-transform: uppercase; color: var(--beige); margin-bottom: 40px; }
-
-    .slider-track {
-      display: flex; gap: 3px;
-      animation: slide 28s linear infinite;
-      width: max-content;
-      will-change: transform;
-      cursor: grab;
+    .hero-bg {
+      position: absolute; inset: 0; z-index: 0;
+      display: flex; flex-direction: column;
+      overflow: hidden; pointer-events: none;
     }
-    .slider-track:active { cursor: grabbing; }
-    @keyframes slide { from { transform: translateX(0); } to { transform: translateX(-50%); } }
+    .hero-row {
+      flex: 1 1 0; min-height: 0;
+      display: flex; overflow: hidden; position: relative;
+    }
+    .hero-row-track {
+      display: flex; gap: 3px; width: max-content;
+      will-change: transform; pointer-events: none;
+    }
+    .hero-row-item { height: 100%; flex-shrink: 0; overflow: hidden; }
+    .hero-row-item img { width: 100%; height: 100%; object-fit: cover; display: block; }
 
-    .slider-item { width: 320px; height: 220px; flex-shrink: 0; overflow: hidden; }
-    .slider-item .img-wrap { height: 220px; }
-    .slider-item .img-wrap img { transition: transform .6s, opacity .4s ease; }
+    /* Tailles — largeur des photos dans une rangée */
+    .hero-row-small  .hero-row-item { width: 150px; }
+    .hero-row-medium .hero-row-item { width: 230px; }
+    .hero-row-large  .hero-row-item { width: 340px; }
+
+    /* Vitesses */
+    .hero-row-slow   .hero-row-track { animation-duration: 90s; }
+    .hero-row-medium-speed .hero-row-track { animation-duration: 60s; }
+    .hero-row-fast    .hero-row-track { animation-duration: 42s; }
+
+    /* Directions — boucle continue, jamais interrompue par la souris */
+    @keyframes rowScrollLeft  { from { transform: translateX(0); }     to { transform: translateX(-50%); } }
+    @keyframes rowScrollRight { from { transform: translateX(-50%); } to { transform: translateX(0); } }
+    .hero-row-left  .hero-row-track { animation-name: rowScrollLeft;  animation-timing-function: linear; animation-iteration-count: infinite; }
+    .hero-row-right .hero-row-track { animation-name: rowScrollRight; animation-timing-function: linear; animation-iteration-count: infinite; }
 
     /* =============================================
        CTA ACCUEIL
@@ -488,13 +511,17 @@
 
       /* Désactive hover/scale sur tactile */
       .match-card:hover .img-wrap img,
-      .photo-item:hover .img-wrap img,
-      .slider-item:hover .img-wrap img { transform: none; }
+      .photo-item:hover .img-wrap img { transform: none; }
       .match-card:hover .match-label { opacity: 0; }
 
-      .slider-item { width: 220px; height: 160px; }
-      .slider-item .img-wrap { height: 160px; }
       .lb-hint { display: none; }
+
+      /* Fond photo du hero : tailles réduites, zone centrale plus compacte, texte jamais recouvert */
+      .hero-row-small  .hero-row-item { width: 90px; }
+      .hero-row-medium .hero-row-item { width: 140px; }
+      .hero-row-large  .hero-row-item { width: 200px; }
+      .hero-content-halo::before { inset: -40px -50px; }
+      .hero-explore-btn { bottom: 26px; }
     }
     @media (max-width: 480px) {
       .photos-grid { grid-template-columns: 1fr; }
@@ -554,8 +581,16 @@
 <div class="page active" id="page-home">
 
   <section class="hero" aria-label="Présentation">
+    <!-- ========================================
+         🖼️ FOND PHOTO ANIMÉ (rangées horizontales)
+         Les images sont injectées ici par JS à partir
+         de la liste "bestPhotos" (voir plus bas dans le script).
+    ============================================= -->
+    <div class="hero-bg" id="heroBg" aria-hidden="true"></div>
+    <div class="hero-vignette" aria-hidden="true"></div>
+
     <div class="hero-content">
-      <div style="position:relative;display:inline-block;padding:0 56px;">
+      <div class="hero-content-halo" style="position:relative;display:inline-block;padding:0 56px;">
         <div class="bracket bracket-tl" aria-hidden="true"></div>
         <div class="bracket bracket-br" aria-hidden="true"></div>
         <p class="hero-tag">— Portfolio photographique —</p>
@@ -567,23 +602,10 @@
         <!-- [6] Bouton hero supprimé -->
       </div>
     </div>
-    <div class="hero-scroll" aria-hidden="true">
-      <span>Défiler</span>
-      <div class="scroll-line"></div>
-    </div>
+
+    <!-- Bouton "Explorer le portfolio" à la place de l'ancien "Défiler" -->
+    <a href="#" class="btn hero-explore-btn" onclick="go('portfolio')"><span>Explorer le portfolio →</span></a>
   </section>
-
-  <!-- Slider -->
-  <div class="slider-section">
-    <p class="slider-label">— Aperçu du portfolio —</p>
-    <div class="slider-track" id="sliderTrack" aria-hidden="true"></div>
-  </div>
-
-  <!-- CTA -->
-  <div class="home-cta fade-in">
-    <h2>Capturer<br><em>l'émotion</em></h2>
-    <a href="#" class="btn" onclick="go('portfolio')"><span>Explorer le portfolio →</span></a>
-  </div>
 
   <!-- [3] Contacts page accueil -->
   <div class="home-contacts fade-in">
@@ -612,7 +634,7 @@
   </div>
 
   <div class="cat-nav" role="tablist">
-    <button class="cat-btn active" role="tab" aria-selected="true"  onclick="showCat('all',    this)">Tout</button>
+    <button class="cat-btn active" role="tab" aria-selected="true"  onclick="showCat('best',   this)">Best</button>
     <button class="cat-btn"        role="tab" aria-selected="false" onclick="showCat('foot',   this)">Football</button>
     <button class="cat-btn"        role="tab" aria-selected="false" onclick="showCat('basket', this)">Basket</button>
     <button class="cat-btn"        role="tab" aria-selected="false" onclick="showCat('rugby',  this)">Rugby</button>
@@ -621,8 +643,8 @@
     <button class="cat-btn"        role="tab" aria-selected="false" onclick="showCat('events', this)">Événements</button>
   </div>
 
-  <div id="view-all" role="tabpanel">
-    <div class="matches-grid" id="allGrid"></div>
+  <div id="view-best" role="tabpanel">
+    <div class="matches-grid" id="bestGrid"></div>
   </div>
 
   <div id="view-sport" style="display:none" role="tabpanel">
@@ -773,7 +795,7 @@ document.addEventListener('DOMContentLoaded', function () {
     initCursor();
   }
 
-  buildSlider();
+  buildHeroBackground();
   initFade();
   initLazyImages();
   initBackBtn();
@@ -910,7 +932,7 @@ function go(page) {
   setTimeout(initFade, 100);
   if (page === 'portfolio') {
     var firstBtn = document.querySelector('.cat-btn');
-    if (firstBtn) showCat('all', firstBtn);
+    if (firstBtn) showCat('best', firstBtn);
   }
   setTimeout(observeAllLazy, 150);
 }
@@ -933,152 +955,119 @@ function parseFrDate(str) {
   return isNaN(d.getTime()) ? 0 : d.getTime();
 }
 
+/* ========================================
+   ⭐ BEST PHOTOS / ACCUEIL
+   ----------------------------------------
+   Ajoutez, supprimez ou modifiez vos photos ici.
+   Cette liste unique sert a DEUX endroits :
+     1) le fond anime de la page d'accueil
+     2) la categorie "Best" du portfolio
+   -> Pas besoin de dupliquer les photos ailleurs,
+      et vous pouvez en mettre autant que vous voulez.
+
+   Pour chaque photo :
+     image    = chemin de l'image (dossier images/ actuel)
+     category = la cle exacte du sport dans DATA
+                ('foot','basket','rugby','cyclisme','nature','events')
+     link     = position du match dans DATA[category].matches
+                (0 = le premier match de cette categorie, 1 = le deuxieme, etc.)
+
+   -> Pour AJOUTER une photo : copiez une ligne et changez image/category/link.
+   -> Pour SUPPRIMER une photo : supprimez sa ligne.
+   -> Pour CHANGER sa destination : changez category et/ou link.
+   Au clic dans "Best", la photo renvoie vers la galerie du match
+   correspondant (category + link), via le systeme deja existant.
+======================================== */
+const bestPhotos = [
+  { image: 'images/football/match10/1.webp',  category: 'foot', link: 0 },
+  { image: 'images/football/match10/5.webp',  category: 'foot', link: 0 },
+  { image: 'images/football/match10/9.webp',  category: 'foot', link: 0 },
+  { image: 'images/football/match10/13.webp', category: 'foot', link: 0 },
+  { image: 'images/football/match9/2.webp',   category: 'foot', link: 1 },
+  { image: 'images/football/match9/6.webp',   category: 'foot', link: 1 },
+  { image: 'images/football/match9/10.webp',  category: 'foot', link: 1 },
+  { image: 'images/football/match1/3.webp',   category: 'foot', link: 2 },
+  { image: 'images/football/match1/7.webp',   category: 'foot', link: 2 },
+  { image: 'images/football/match1/11.webp',  category: 'foot', link: 2 },
+  { image: 'images/football/match3/4.webp',   category: 'foot', link: 3 },
+  { image: 'images/football/match3/8.webp',   category: 'foot', link: 3 },
+  { image: 'images/football/match3/12.webp',  category: 'foot', link: 3 },
+  { image: 'images/football/match5/2.webp',   category: 'foot', link: 6 },
+  { image: 'images/football/match5/7.webp',   category: 'foot', link: 6 },
+  { image: 'images/football/match5/13.webp',  category: 'foot', link: 6 },
+  { image: 'images/basket/match1/2.webp',     category: 'basket', link: 0 },
+  { image: 'images/basket/match1/5.webp',     category: 'basket', link: 0 },
+  { image: 'images/basket/match1/8.webp',     category: 'basket', link: 0 },
+  { image: 'images/basket/match2/3.webp',     category: 'basket', link: 1 },
+  { image: 'images/basket/match2/7.webp',     category: 'basket', link: 1 },
+  { image: 'images/basket/match2/10.webp',    category: 'basket', link: 1 },
+  { image: 'images/cyclisme/championnatdefrance/3.webp',  category: 'cyclisme', link: 0 },
+  { image: 'images/cyclisme/championnatdefrance/8.webp',  category: 'cyclisme', link: 0 },
+  { image: 'images/cyclisme/championnatdefrance/13.webp', category: 'cyclisme', link: 0 },
+  { image: 'images/cyclisme/tourdefrance/4.webp',  category: 'cyclisme', link: 1 },
+  { image: 'images/cyclisme/tourdefrance/9.webp',  category: 'cyclisme', link: 1 },
+  { image: 'images/cyclisme/tourdefrance/12.webp', category: 'cyclisme', link: 1 },
+  { image: 'images/rugby/match1/2.webp',  category: 'rugby', link: 0 },
+  { image: 'images/rugby/match1/7.webp',  category: 'rugby', link: 0 },
+  { image: 'images/rugby/match1/11.webp', category: 'rugby', link: 0 },
+  { image: 'images/nature/shooting1/2.webp',  category: 'nature', link: 0 },
+  { image: 'images/nature/shooting1/7.webp',  category: 'nature', link: 0 },
+  { image: 'images/nature/shooting1/13.webp', category: 'nature', link: 0 },
+  { image: 'images/evenements/ceremoniegendarmerie/5.webp',  category: 'events', link: 0 },
+  { image: 'images/evenements/ceremoniegendarmerie/15.webp', category: 'events', link: 0 },
+  { image: 'images/evenements/ceremoniegendarmerie/25.webp', category: 'events', link: 0 },
+  { image: 'images/evenements/14juillet/3.webp',  category: 'events', link: 1 },
+  { image: 'images/evenements/14juillet/7.webp',  category: 'events', link: 1 },
+  { image: 'images/evenements/14juillet/10.webp', category: 'events', link: 1 },
+];
+
 /* =============================================
-   SLIDER — AUTO + DRAG/SWIPE + REPRISE
-   
-   CORRECTION BUG : DOMMatrix('none') → TypeError
-   Fix : si transform === 'none', on utilise la matrice
-   identité 'matrix(1,0,0,1,0,0)' avant d'instancier DOMMatrix.
+   FOND PHOTO DU HERO -- rangees horizontales
+   100% CSS (transform), non interactif, jamais en
+   pause au survol. Repartit bestPhotos sur plusieurs
+   rangees de tailles/vitesses/directions differentes.
 ============================================= */
-function buildSlider() {
-  var track = document.getElementById('sliderTrack');
-  if (!track) return;
+function buildHeroBackground() {
+  var container = document.getElementById('heroBg');
+  if (!container || !bestPhotos.length) return;
 
-  var items = [];
-  Object.entries(DATA).forEach(function (entry) {
-    var sport = entry[1];
-    sport.matches.forEach(function (match) {
-      if (items.length >= 12) return;
-      var cover = match.cover || (match.photos && match.photos[0]) || null;
-      if (cover) items.push({ label: sport.label + ' — ' + match.name, cover: cover });
-    });
+  var ROWS = [
+    { size: 'hero-row-small',  speed: 'hero-row-slow',          dir: 'hero-row-left'  },
+    { size: 'hero-row-medium', speed: 'hero-row-medium-speed',  dir: 'hero-row-right' },
+    { size: 'hero-row-large',  speed: 'hero-row-fast',          dir: 'hero-row-left'  },
+    { size: 'hero-row-medium', speed: 'hero-row-slow',          dir: 'hero-row-right' },
+    { size: 'hero-row-small',  speed: 'hero-row-fast',          dir: 'hero-row-left'  },
+    { size: 'hero-row-large',  speed: 'hero-row-medium-speed',  dir: 'hero-row-right' },
+  ];
+  /* Nombre d'images necessaires pour couvrir largement l'ecran selon la taille */
+  var MIN_COVER = { 'hero-row-small': 20, 'hero-row-medium': 14, 'hero-row-large': 10 };
+
+  var html = '';
+  ROWS.forEach(function (row, i) {
+    /* On repartit les photos entre les rangees pour varier les images affichees */
+    var slice = bestPhotos.filter(function (_, idx) { return idx % ROWS.length === i; });
+    if (!slice.length) slice = bestPhotos;
+
+    var need = MIN_COVER[row.size] || 14;
+    var repeated = [];
+    while (repeated.length < need) repeated = repeated.concat(slice);
+    var doubled = repeated.concat(repeated); /* x2 pour la boucle continue sans coupure */
+
+    var itemsHtml = doubled.map(function (p) {
+      return '<div class="hero-row-item"><img src="' + p.image + '" alt="" loading="lazy" width="340" height="220"></div>';
+    }).join('');
+
+    html += '<div class="hero-row ' + row.size + ' ' + row.speed + ' ' + row.dir + '"><div class="hero-row-track">' + itemsHtml + '</div></div>';
   });
 
-  /* Duplication ×2 pour défilement infini */
-  var doubled = items.concat(items);
-  track.innerHTML = doubled.map(function (item) {
-    return '<div class="slider-item">' + lazyImg(item.cover, item.label, 320, 220) + '</div>';
-  }).join('');
-
-  observeAllLazy();
-  initSliderInteraction(track, items.length);
-}
-
-function initSliderInteraction(track, itemCount) {
-  var ITEM_W      = 323;             /* 320px + 3px gap */
-  var HALF_TOTAL  = itemCount * ITEM_W;
-  var RESUME_DELAY = 1000;           /* ms avant reprise auto */
-
-  var currentX    = 0;
-  var isDragging  = false;
-  var dragStartX  = 0;
-  var dragStartOffset = 0;
-  var resumeTimer = null;
-
-  /* -------------------------------------------------------
-     CORRECTION BUG DOMMatrix('none')
-     
-     getComputedStyle().transform vaut 'none' quand aucune
-     transformation n'a encore été appliquée.
-     new DOMMatrix('none') lève un TypeError sur certains
-     navigateurs (Safari, Chrome < 90).
-     
-     Fix : on substitue la matrice identité avant d'instancier.
-  ------------------------------------------------------- */
-  function getCurrentCSSOffset() {
-    var style     = window.getComputedStyle(track);
-    var rawTransform = style.transform;
-
-    /* ✅ FIX : 'none' → matrice identité */
-    var safeTransform = (rawTransform === 'none' || !rawTransform)
-      ? 'matrix(1,0,0,1,0,0)'
-      : rawTransform;
-
-    try {
-      var matrix = new DOMMatrix(safeTransform);
-      return matrix.m41; /* translateX */
-    } catch (e) {
-      /* Fallback ultime si DOMMatrix indisponible */
-      return 0;
-    }
-  }
-
-  function pauseAnim() {
-    currentX = getCurrentCSSOffset();
-    track.style.animationPlayState = 'paused';
-    track.style.transform = 'translateX(' + currentX + 'px)';
-  }
-
-  function resumeAnim() {
-    var x = currentX % HALF_TOTAL;
-    if (x > 0) x -= HALF_TOTAL;
-    var progress = Math.abs(x) / HALF_TOTAL;
-    var duration = 28;
-    var delay    = -(progress * duration);
-    track.style.transform          = '';
-    track.style.animationDelay     = delay + 's';
-    track.style.animationPlayState = 'running';
-  }
-
-  function scheduleResume() {
-    clearTimeout(resumeTimer);
-    resumeTimer = setTimeout(function () { if (!isDragging) resumeAnim(); }, RESUME_DELAY);
-  }
-
-  function applyDrag(x) {
-    var nx = x % HALF_TOTAL;
-    if (nx > 0)           nx -= HALF_TOTAL;
-    if (nx < -HALF_TOTAL) nx += HALF_TOTAL;
-    track.style.transform = 'translateX(' + nx + 'px)';
-    currentX = nx;
-  }
-
-  /* --- Drag souris --- */
-  track.addEventListener('mousedown', function (e) {
-    e.preventDefault();
-    isDragging = true;
-    dragStartX = e.clientX;
-    dragStartOffset = getCurrentCSSOffset();
-    pauseAnim();
-    track.style.cursor = 'grabbing';
-    clearTimeout(resumeTimer);
-  });
-  document.addEventListener('mousemove', function (e) {
-    if (!isDragging) return;
-    applyDrag(dragStartOffset + (e.clientX - dragStartX));
-  }, { passive: true });
-  document.addEventListener('mouseup', function () {
-    if (!isDragging) return;
-    isDragging = false; track.style.cursor = ''; scheduleResume();
-  });
-  document.addEventListener('mouseleave', function () {
-    if (!isDragging) return;
-    isDragging = false; track.style.cursor = ''; scheduleResume();
-  });
-
-  /* --- Swipe touch --- */
-  var touchStartX = 0, touchStartOffset = 0;
-  track.addEventListener('touchstart', function (e) {
-    touchStartX = e.touches[0].clientX;
-    touchStartOffset = getCurrentCSSOffset();
-    pauseAnim();
-    clearTimeout(resumeTimer);
-  }, { passive: true });
-  track.addEventListener('touchmove', function (e) {
-    applyDrag(touchStartOffset + (e.touches[0].clientX - touchStartX));
-  }, { passive: true });
-  track.addEventListener('touchend', function () { scheduleResume(); }, { passive: true });
-
-  /* --- Hover desktop : pause --- */
-  track.addEventListener('mouseenter', function () { if (!isDragging) { pauseAnim(); clearTimeout(resumeTimer); } });
-  track.addEventListener('mouseleave', function () { if (!isDragging) scheduleResume(); });
+  container.innerHTML = html;
 }
 
 /* =============================================
    PORTFOLIO — GESTION DES VUES
 ============================================= */
 var currentSport = null;
-var previousView = 'all';
+var previousView = 'best';
 
 function showCat(cat, btn) {
   document.querySelectorAll('.cat-btn').forEach(function (b) {
@@ -1086,14 +1075,14 @@ function showCat(cat, btn) {
   });
   if (btn) { btn.classList.add('active'); btn.setAttribute('aria-selected', 'true'); }
 
-  ['view-all','view-sport','view-gallery'].forEach(function (id) {
+  ['view-best','view-sport','view-gallery'].forEach(function (id) {
     var el = document.getElementById(id); if (el) el.style.display = 'none';
   });
 
-  if (cat === 'all') {
-    previousView = 'all';
-    document.getElementById('view-all').style.display = 'block';
-    buildAllGrid();
+  if (cat === 'best') {
+    previousView = 'best';
+    document.getElementById('view-best').style.display = 'block';
+    buildBestGrid();
   } else {
     previousView = 'sport'; currentSport = cat;
     document.getElementById('view-sport').style.display = 'block';
@@ -1102,26 +1091,21 @@ function showCat(cat, btn) {
   setTimeout(observeAllLazy, 100);
 }
 
-/* Grille "Tout" — triée par date décroissante */
-function buildAllGrid() {
-  var grid = document.getElementById('allGrid');
+/* Grille "Best" — utilise directement la liste bestPhotos.
+   Chaque photo, au clic, ouvre le match/evenement associe
+   (meme systeme que les autres categories : openMatch). */
+function buildBestGrid() {
+  var grid = document.getElementById('bestGrid');
   if (!grid) return;
 
-  var items = [];
-  Object.entries(DATA).forEach(function (entry) {
-    var sportKey = entry[0], sport = entry[1];
-    sport.matches.forEach(function (match, i) {
-      var cover = match.cover || (match.photos && match.photos[0]) || null;
-      items.push({ sport: sportKey, matchIndex: i, label: sport.label + ' — ' + match.name, name: match.name, cover: cover, timestamp: parseFrDate(match.name) });
-    });
-  });
-  items.sort(function (a, b) { return b.timestamp - a.timestamp; });
-
-  grid.innerHTML = items.map(function (item) {
-    return '<div class="match-card" onclick="openMatch(\'' + item.sport + '\',' + item.matchIndex + ')" role="button" tabindex="0" aria-label="' + item.label + '">'
-      + lazyImg(item.cover, item.label, 400, 300)
+  grid.innerHTML = bestPhotos.map(function (item) {
+    var sport = DATA[item.category];
+    var match = sport && sport.matches[item.link];
+    var label = sport ? sport.label + ' — ' + (match ? match.name : '') : '';
+    return '<div class="match-card" onclick="openMatch(\'' + item.category + '\',' + item.link + ')" role="button" tabindex="0" aria-label="' + label + '">'
+      + lazyImg(item.image, label, 400, 300)
       + '<div class="match-tap-hint" aria-hidden="true"><span class="tap-icon">+</span><span class="tap-label">Voir plus</span></div>'
-      + '<div class="match-label"><span>' + item.label + '</span></div>'
+      + '<div class="match-label"><span>' + label + '</span></div>'
       + '</div>';
   }).join('');
 }
@@ -1153,9 +1137,9 @@ var currentMatchIdx    = null;
 function openMatch(sport, matchIdx) {
   if (!DATA[sport] || !DATA[sport].matches[matchIdx]) return;
 
-  var viewAll   = document.getElementById('view-all');
+  var viewAll   = document.getElementById('view-best');
   var viewSport = document.getElementById('view-sport');
-  if (viewAll   && viewAll.style.display   !== 'none') previousView = 'all';
+  if (viewAll   && viewAll.style.display   !== 'none') previousView = 'best';
   else if (viewSport && viewSport.style.display !== 'none') previousView = 'sport';
 
   currentSportOpen   = sport;
@@ -1164,7 +1148,7 @@ function openMatch(sport, matchIdx) {
   currentMatchPhotos = match.photos || [];
   currentBatchStart  = 0;
 
-  ['view-all','view-sport'].forEach(function (id) { var el = document.getElementById(id); if (el) el.style.display = 'none'; });
+  ['view-best','view-sport'].forEach(function (id) { var el = document.getElementById(id); if (el) el.style.display = 'none'; });
   var viewGallery = document.getElementById('view-gallery');
   if (viewGallery) viewGallery.style.display = 'block';
 
@@ -1223,11 +1207,11 @@ function initBackBtn() {
 
 function backToMatches() {
   var viewGallery = document.getElementById('view-gallery');
-  var viewAll     = document.getElementById('view-all');
+  var viewBest    = document.getElementById('view-best');
   var viewSport   = document.getElementById('view-sport');
   if (viewGallery) viewGallery.style.display = 'none';
-  if (previousView === 'all') { if (viewAll)   viewAll.style.display   = 'block'; }
-  else                        { if (viewSport) viewSport.style.display = 'block'; }
+  if (previousView === 'best') { if (viewBest)  viewBest.style.display  = 'block'; }
+  else                         { if (viewSport) viewSport.style.display = 'block'; }
 }
 
 /* =============================================
