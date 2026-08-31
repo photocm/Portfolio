@@ -258,9 +258,12 @@
     .hero-row-medium-speed .hero-row-track { animation-duration: 60s; }
     .hero-row-fast    .hero-row-track { animation-duration: 42s; }
 
-    /* Directions — boucle continue, jamais interrompue par la souris */
-    @keyframes rowScrollLeft  { from { transform: translateX(0); }     to { transform: translateX(-50%); } }
-    @keyframes rowScrollRight { from { transform: translateX(-50%); } to { transform: translateX(0); } }
+    /* Directions — boucle continue, jamais interrompue par la souris.
+       translate3d() plutôt que translateX() : force la composition GPU
+       (calque séparé), ce qui est nettement plus léger pour le
+       processeur/la RAM sur mobile qu'une animation translateX classique. */
+    @keyframes rowScrollLeft  { from { transform: translate3d(0,0,0); }     to { transform: translate3d(-50%,0,0); } }
+    @keyframes rowScrollRight { from { transform: translate3d(-50%,0,0); } to { transform: translate3d(0,0,0); } }
     .hero-row-left  .hero-row-track { animation-name: rowScrollLeft;  animation-timing-function: linear; animation-iteration-count: infinite; }
     .hero-row-right .hero-row-track { animation-name: rowScrollRight; animation-timing-function: linear; animation-iteration-count: infinite; }
 
@@ -861,7 +864,7 @@ function lazyImg(src, alt, w, h) {
   var safeSrc = src.replace(/"/g, '');
   var safeAlt = (alt || '').replace(/"/g, '');
   return '<div class="img-wrap">'
-    + '<img data-src="' + safeSrc + '" src="' + GIF1 + '" alt="' + safeAlt + '" width="' + (w || 400) + '" height="' + (h || 300) + '" loading="lazy">'
+    + '<img data-src="' + safeSrc + '" src="' + GIF1 + '" alt="' + safeAlt + '" width="' + (w || 400) + '" height="' + (h || 300) + '" loading="lazy" decoding="async">'
     + '</div>';
 }
 
@@ -984,35 +987,82 @@ const bestPhotos = [
    100% CSS (transform), non interactif, jamais en
    pause au survol. Repartit bestPhotos sur plusieurs
    rangees de tailles/vitesses/directions differentes.
+
+   OPTIMISATION MOBILE (cause du crash) :
+   Avant, le meme nombre d'images (6 rangees, ~176
+   <img> au total) etait genere sur desktop ET sur
+   mobile -- seule la largeur CSS des vignettes changeait.
+   Sur mobile, ces ~176 photos plein format etaient donc
+   toutes decodees en memoire des le chargement de la page,
+   ce qui sature la RAM allouee aux images par le navigateur
+   mobile et fait planter l'onglet en cours de chargement.
+
+   Desormais, la quantite reelle d'elements <img> crees
+   depend de la largeur d'ecran (meme seuil que le CSS,
+   768px), detectee via matchMedia. Le rendu desktop est
+   inchange ; sur mobile, on genere ~5x moins d'images tout
+   en gardant assez de photos pour que la boucle reste
+   continue et fluide (tailles, vitesses et directions
+   variees conservees).
 ============================================= */
+var HERO_ROWS_DESKTOP = [
+  { size: 'hero-row-small',  speed: 'hero-row-slow',          dir: 'hero-row-left'  },
+  { size: 'hero-row-medium', speed: 'hero-row-medium-speed',  dir: 'hero-row-right' },
+  { size: 'hero-row-large',  speed: 'hero-row-fast',          dir: 'hero-row-left'  },
+  { size: 'hero-row-medium', speed: 'hero-row-slow',          dir: 'hero-row-right' },
+  { size: 'hero-row-small',  speed: 'hero-row-fast',          dir: 'hero-row-left'  },
+  { size: 'hero-row-large',  speed: 'hero-row-medium-speed',  dir: 'hero-row-right' },
+];
+/* Nombre d'images necessaires pour couvrir largement l'ecran selon la taille (desktop) */
+var HERO_MIN_COVER_DESKTOP = { 'hero-row-small': 20, 'hero-row-medium': 14, 'hero-row-large': 10 };
+
+/* Mobile : moins de rangees, moins d'images par rangee.
+   Les valeurs "need" restent juste suffisantes pour couvrir
+   une largeur d'ecran mobile/tablette (jusqu'a 768px) sans
+   coupure visible dans la boucle -- pas de vide, juste moins
+   de repetitions inutiles hors champ. */
+var HERO_ROWS_MOBILE = [
+  { size: 'hero-row-small',  speed: 'hero-row-slow',          dir: 'hero-row-left'  },
+  { size: 'hero-row-medium', speed: 'hero-row-fast',          dir: 'hero-row-right' },
+  { size: 'hero-row-large',  speed: 'hero-row-medium-speed',  dir: 'hero-row-left'  },
+];
+var HERO_MIN_COVER_MOBILE = { 'hero-row-small': 9, 'hero-row-medium': 6, 'hero-row-large': 4 };
+
+/* Meme seuil que le CSS (@media max-width: 768px) : on detecte
+   correctement les petits ecrans plutot que de deviner via le
+   user-agent. */
+var heroMobileMql = window.matchMedia('(max-width: 768px)');
+
 function buildHeroBackground() {
   var container = document.getElementById('heroBg');
   if (!container || !bestPhotos.length) return;
 
-  var ROWS = [
-    { size: 'hero-row-small',  speed: 'hero-row-slow',          dir: 'hero-row-left'  },
-    { size: 'hero-row-medium', speed: 'hero-row-medium-speed',  dir: 'hero-row-right' },
-    { size: 'hero-row-large',  speed: 'hero-row-fast',          dir: 'hero-row-left'  },
-    { size: 'hero-row-medium', speed: 'hero-row-slow',          dir: 'hero-row-right' },
-    { size: 'hero-row-small',  speed: 'hero-row-fast',          dir: 'hero-row-left'  },
-    { size: 'hero-row-large',  speed: 'hero-row-medium-speed',  dir: 'hero-row-right' },
-  ];
-  /* Nombre d'images necessaires pour couvrir largement l'ecran selon la taille */
-  var MIN_COVER = { 'hero-row-small': 20, 'hero-row-medium': 14, 'hero-row-large': 10 };
+  var isMobile  = heroMobileMql.matches;
+  var ROWS      = isMobile ? HERO_ROWS_MOBILE      : HERO_ROWS_DESKTOP;
+  var MIN_COVER = isMobile ? HERO_MIN_COVER_MOBILE : HERO_MIN_COVER_DESKTOP;
 
   var html = '';
   ROWS.forEach(function (row, i) {
-    /* On repartit les photos entre les rangees pour varier les images affichees */
-    var slice = bestPhotos.filter(function (_, idx) { return idx % ROWS.length === i; });
-    if (!slice.length) slice = bestPhotos;
-
     var need = MIN_COVER[row.size] || 14;
-    var repeated = [];
-    while (repeated.length < need) repeated = repeated.concat(slice);
-    var doubled = repeated.concat(repeated); /* x2 pour la boucle continue sans coupure */
 
+    /* On choisit exactement "need" photos pour cette rangée (en tournant
+       dans bestPhotos avec un décalage propre à chaque rangée, pour varier
+       les images affichées d'une rangée à l'autre). C'est ce nombre "need"
+       qui détermine réellement la quantité d'images créées : sur mobile,
+       need est volontairement beaucoup plus petit, donc beaucoup moins
+       d'éléments <img> sont générés (voir HERO_MIN_COVER_MOBILE plus haut). */
+    var picked = [];
+    var idx = i;
+    while (picked.length < need) {
+      picked.push(bestPhotos[idx % bestPhotos.length]);
+      idx += ROWS.length;
+    }
+    var doubled = picked.concat(picked); /* x2 pour la boucle continue sans coupure */
+
+    /* decoding="async" : le decodage de l'image ne bloque pas le thread
+       principal pendant le rendu -- utile vu le nombre d'images. */
     var itemsHtml = doubled.map(function (p) {
-      return '<div class="hero-row-item"><img src="' + p.image + '" alt="" loading="lazy" width="340" height="220"></div>';
+      return '<div class="hero-row-item"><img src="' + p.image + '" alt="" loading="lazy" decoding="async" width="340" height="220"></div>';
     }).join('');
 
     html += '<div class="hero-row ' + row.size + ' ' + row.speed + ' ' + row.dir + '"><div class="hero-row-track">' + itemsHtml + '</div></div>';
@@ -1020,6 +1070,12 @@ function buildHeroBackground() {
 
   container.innerHTML = html;
 }
+
+/* Reconstruit le fond UNIQUEMENT quand on franchit le seuil mobile/desktop
+   (rotation d'écran, redimensionnement de fenêtre) -- pas de recalcul en
+   continu pendant un resize, l'écouteur ne se déclenche qu'au changement
+   réel du résultat de la media query. */
+heroMobileMql.addEventListener('change', buildHeroBackground);
 
 /* =============================================
    PORTFOLIO — GESTION DES VUES
